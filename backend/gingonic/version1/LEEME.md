@@ -1,6 +1,6 @@
-#Pantilla Estandar Frontend
+#Pantilla Estandar Backend
 
-#Lista de recursos para la version del frontend:
+#Lista de recursos para la version del backend:
     lib: Bibliotecas.
     cfg: Archivos de configuración.
     doc: Documentación.
