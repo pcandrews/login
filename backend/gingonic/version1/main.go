@@ -3,9 +3,13 @@ package main
 /*
 	Estan definidos MySQL y SQLite, para hacer pruebas.
 	Se utiliza Gorm.
+	Cuando se agrega una guion bajo delante de las dependencias, por ejemplo:
+		_ "github.com/go-sql-driver/mysql"
+	Se desactivan los warnings por no uso de la denpendencia, o sea, si no se utliza, no se indicará que no se utiliza.
 */
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
@@ -15,14 +19,26 @@ import (
 
 //Persona tipo de dato
 //Para usar IDPersona en lugar de ID, se debe añadir gorm:"primary_key".
-type Persona struct {
+/*type Persona struct {
 	IDPersona uint `json:"idPersona" gorm:"primary_key"`
-	//ID			 	uint   `json:"idPersona"`
-	DniPersona       uint   `json:"dniPersona"`
-	CuilPersona      uint   `json:"cuilPersona"`
-	NombresPersona   string `json:"nombresPersona"`
-	ApellidosPersona string `json:"apellidosPersona"`
-	SexoPersona      string `json:"sexoPersona"`
+	//ID			 	 uint 	`json:"idPersona"`
+	DniPersona           uint   `json:"dniPersona"`
+	CuilPersona          uint   `json:"cuilPersona"`
+	NombresPersona       string `json:"nombresPersona"`
+	ApellidosPersona     string `json:"apellidosPersona"`
+	SexoPersona          string `json:"sexoPersona"`
+	ObservacionesPersona string `json:"observacionesPersona"`
+}*/
+
+type Persona struct {
+	IDPersona uint `form:"idPersona" gorm:"primary_key"`
+	//ID			 	 uint 	`form:"idPersona"`
+	DniPersona           uint   `form:"dniPersona"`
+	CuilPersona          uint   `form:"cuilPersona"`
+	NombresPersona       string `form:"nombresPersona"`
+	ApellidosPersona     string `form:"apellidosPersona"`
+	SexoPersona          string `form:"sexoPersona"`
+	ObservacionesPersona string `form:"observacionesPersona"`
 }
 
 //Empleado tipo de dato
@@ -84,13 +100,28 @@ func main() {
 	//Tb crear una table con un nombre dado.
 	//db.Table("usuarios_empleados").CreateTable(&UsuarioEmpleado{})
 
-	//	Default returns an Engine instance with the Logger and Recovery middleware already attached.
+	//Default returns an Engine instance with the Logger and Recovery middleware already attached.
+	//Engine is the framework's instance, it contains the muxer, middlewares and configuration settings. Create an instance of Engine, by using New() or Default()
 	router := gin.Default()
+
+	//LoadHTMLFiles loads a slice of HTML files and associates the result with HTML renderer.
+	//Es necesario invocar a los archivo template o html para que se puedan utilizar.
+	router.LoadHTMLFiles("formulario-persona.tmpl")
+
+	router.GET("/", Inicio)
+
 	router.GET("/signin", GetUsuario)
 	router.POST("/crear-persona", CrearPersona)
 	router.POST("/crear-usuario-empleado", CrearUsuarioEmpleado)
 
-	router.Run(":8887")
+	router.GET("/formulario-persona", GetFormularioPersona)
+	router.POST("/mostrarDatosPersona", PostMostrarDatosPersona)
+
+	/*
+		sudo lsof -n -i :8080
+		kill -9 <PID>
+	*/
+	router.Run(":8080")
 }
 
 /*
@@ -130,6 +161,7 @@ func GetUsuario(c *gin.Context) {
 func CrearPersona(c *gin.Context) {
 	var persona Persona
 	c.BindJSON(&persona)
+	db.Exec("ALTER TABLE `personas` AUTO_INCREMENT =1;")
 	db.Create(&persona)
 	c.JSON(200, persona)
 }
@@ -155,12 +187,140 @@ func CrearUsuarioEmpleado(c *gin.Context) {
 	//db.Create(&user)
 	//db.NewRecord(user) // => return `false` after `user` created
 
+	db.Exec("ALTER TABLE `usuarios_empleados` AUTO_INCREMENT =1;")
+
 	//db.Create(&usuario) sería suficiente si la configuacion por defecto de gorm no hiciese plural solo los ultimos terminos.
 	//quizas se pueda configurar eso, pero es mejor atajar el problema de esta forma para que corra en una instalacion estandar.
 	db.Table("usuarios_empleados").Create(&usuario)
 	c.JSON(200, usuario)
 }
 
-// ! Alets
-// ?
-// *
+/**
+ * Mi metodo
+ **Importante
+ *! deprecated
+ *? should this method be exposed?
+ * TODO: abc
+ * @param myparam parametro
+ */
+
+/*
+
+	http://www.forosdelweb.com/f18/aporte-entendiendo-las-cabeceras-post-get-put-delete-920883/
+
+	Relacion CRUD (Crear, recuperar, actualizar y eliminar) con la semántica con "Representational State Transfer" (REST, verbos definidos por la especificación de HTTP: GET, PUT, POST, DELETE, HEAD, etc.)
+
+	Mientras que recuperar realmente se asigna a una solicitud GET HTTP, y también eliminar realmente se asigna a una operación HTTP DELETE, el mismo no puede decirse de crear y PUT o la actualización y POST. En algunos casos, crear es PUT, pero en otros casos se debe emplear POST. Del mismo modo, en algunos casos, actualización puede ser POST, mientras que en otros PUT.
+
+	La esencia de la cuestión se reduce a un concepto conocido como *idempotencia. Una operación es idempotente si hay una secuencia de dos o más del mismo resultado de operación en el mismo estado de recurso, al igual que se trabaja con una clase que implementa singleton. De acuerdo con la especificación HTTP 1.1, GET, HEAD, PUT y DELETE son idempotentes, mientras que POST no lo es. Es decir, una secuencia de varios intentos de poner los datos a una URL se traducirá en el estado de los recursos lo mismo que un solo intento de poner los datos a esa URL, pero el mismo no se puede decir de una petición POST. Por ello, un navegador siempre le aparece un cuadro de diálogo de advertencia cuando se hace más de una petición en un formulario POST.
+
+	? · Crear = PUT si y sólo si va a enviar todo el contenido del recurso especificado (dirección URL)
+	? · Crear = POST si va a enviar un comando al servidor para crear un subordinado del recurso especificado mediante algún algoritmo del lado del servidor
+	? · Recuperar = GET
+	? · Actualizar = PUT si y sólo si va a actualizar el contenido completo del recurso especificado
+	? · Actualizar = POST si usted está solicitando el servidor para actualizar uno o más subordinados del recurso especificado
+	? · Eliminar = DELETE
+
+	* idempotente = Se refiere a una operación que produce los mismos resultados sin importar cuántas veces se lleva a cabo. Por ejemplo, si una solicitud para eliminar un archivo se completa con éxito de un programa, todas las solicitudes posteriores a eliminar ese archivo de otros programas devolverán el mensaje de confirmación del primero como éxito si la función de borrado es idempotente. En una función que no es idempotente, un error se devuelve para la segunda y subsiguientes peticiones que indica que el archivo no estaba allí, y que la condición de error puede provocar que el programa se detuviera. Si todo lo que se desea es garantizar un determinado archivo se ha eliminado, una función idempotente de eliminar devolvería el resultado mismo, éxito, no importa cuántas veces se ha ejecutado para el mismo archivo.
+
+	En todo esto se refiere a cuando por ejemplo, tenemos un formulario y ese formulario no vemos que haya una acción, continuamos presionando varias veces el botón de "submit" hasta que vemos resultado. Eso lo evitamos verificando la misma solucitud que se sometió consultando si ya existe el resultado en la base de datos. O cuando refrescamos la pantalla y si usamos POST vemos el cuadro de advertencia de que si desea enviar los datos nuevamente, mientras que PUT no aparece, sino que te muestra el resultado de la primera vez.
+*/
+
+func Inicio(c *gin.Context) {
+	c.String(http.StatusOK, "Inicio")
+}
+
+/*
+	GET (equivalente a READ de CRUD)
+	El método GET se emplea para leer una representación de un resource. En caso de respuesta positiva (200 OK), GET devuelve la representación en un formato concreto: HTML, XML, JSON o imágenes, JavaScript, CSS, etc. En caso de respuesta negativa devuelve 404 (not found) o 400 (bad request). Por ejemplo en la carga de una página web, primero se carga la url solicitada:
+
+	GET php.net/docs HTTP/1.1
+	En este caso devolverá HTML. Y después los demás resources como CSS, JS, o imágenes:
+
+	GET php.net/images/logo.png HTTP/1.1
+	Los formularios también pueden usarse con el método GET, donde se añaden los keys y values buscados a la URL del header:
+
+	<form action="formget.php" method="get">
+	Nombre: <input type="text" name="nombre"><br>
+	Email: <input type="text" name="email"><br>
+	<input type="submit" value="Enviar">
+	</form>
+	La URL con los datos rellenados quedaría así:
+
+	GET ejemplo.com/formget.php?nombre=pepe&email=pepe%40ejemplo.com HTTP/1.1
+*/
+/*
+	GetPersona: recupera datos desde un formulario.
+*/
+func GetFormularioPersona(c *gin.Context) {
+	/*dniPersona := c.Param("dni")
+	cuilPersona := c.Param("cuil")
+	nombresPersona := c.Param("nombres")
+	apellidosPersona := c.Param("apellidos")
+	sexoPersona := c.Param("sexo")
+	observacionesPersona := c.Param("observaciones")*/
+
+	/*c.HTML(http.StatusOK, "formulario-persona.tmpl", gin.H{
+	"dni":           dniPersona,
+	"cuil":          cuilPersona,
+	"nombres":       nombresPersona,
+	"apellidos":     apellidosPersona,
+	"sexo":          sexoPersona,
+	"observaciones": observacionesPersona})*/
+
+	c.HTML(http.StatusOK, "formulario-persona.tmpl", nil)
+}
+
+/*
+	POST
+	Aunque se puedan enviar datos a través del método GET, en muchos casos se utiliza POST por las limitaciones de GET. En caso de respuesta positiva devuelve 201 (created). Los POST requests se envían normalmente con formularios:
+
+	<form action="formpost.php" method="post">
+		Nombre: <input type="text" name="nombre"><br>
+		Email: <input type="text" name="email"><br>
+		<input type="submit" value="Enviar">
+	</form>
+	Rellenar el formulario anterior crea un HTTP request con la request line:
+
+	POST /formpost.php HTTP/1.1
+	El contenido va en el body del request, no aparece nada en la URL, aunque se envía en el mismo formato que con el método GET. Si se quiere enviar texto largo o cualquier tipo de archivo este es el método apropiado.
+
+	Le siguen los headers, donde se incluyen algunas líneas específicas con información de los datos enviados:
+
+	Content-Type: application/x-www-form-urlencoded
+	Content-Length: 43
+	A los headers le siguen una línea en blanco y a continuación el contenido del request:
+
+	formpost.php?nombre=pepe&email=pepe%40ejemplo.com
+*/
+/*
+	PostMostrarDatosPersona: muestra los datos enviados desde un formulario.
+*/
+func PostMostrarDatosPersona(c *gin.Context) {
+	//var persona Persona // es equivalente a  persona := new(Persona)
+
+	//c.BindJSON(&persona)
+	//c.Bind(&persona)
+	//c.ShouldBind(&persona)
+
+	//fmt.Println(persona)
+	//fmt.Printf("bla")
+
+	//c.JSON(http.StatusOK, persona)
+	//c.JSON(http.StatusOK, gin.H{"nombres": persona.NombresPersona})
+
+	dniPersona := c.PostForm("dni")
+	cuilPersona := c.PostForm("cuil")
+	nombresPersona := c.PostForm("nombres")
+	apellidosPersona := c.PostForm("apellidos")
+	sexoPersona := c.PostForm("sexo")
+	observacionesPersona := c.PostForm("observaciones")
+
+	c.JSON(http.StatusOK, gin.H{
+		"dni":           dniPersona,
+		"cuil":          cuilPersona,
+		"nombres":       nombresPersona,
+		"apellidos":     apellidosPersona,
+		"sexo":          sexoPersona,
+		"observaciones": observacionesPersona})
+}
