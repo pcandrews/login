@@ -1,0 +1,9 @@
+curl -i -X  POST http://localhost:8080/crear-persona -d '{ "DNIPersona": 12344567, "CuilPersona":20192912, "NombresPersona":"Juan", "ApellidosPersona":"Perez", "SexoPersona":"masculino" }'
+
+curl -i -X  POST http://localhost:8080/mostrarDatosPersona -d '{ "NombresPersona":"Juan"}'
+
+curl -v --form nombresPersona=pablo --form apellidosPersona=cristo  POST http://localhost:8080/verificar-datos-formulario-persona
+
+curl -v -d "vb_login_username=username&vb_login_password=password&do=login" http://f7.masaladesi.com/login.php
+
+curl -v -d "nombresPersona=pablo&apellidosPersona=cristo"  http://localhost:8080/verificar-datos-formulario-persona
