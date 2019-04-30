@@ -1,4 +1,5 @@
 #!/bin/bash
+# sube los cambios a git
 # para usar espacios en el commit usar comillas simples
 # sino, no dejar espacios
 git add . &&
