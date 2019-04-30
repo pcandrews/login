@@ -12,34 +12,43 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	//"github.com/gin-gonic/gin/binding"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
-//Persona tipo de dato
-//Para usar IDPersona en lugar de ID, se debe añadir gorm:"primary_key".
-/*type Persona struct {
-	IDPersona uint `json:"idPersona" gorm:"primary_key"`
-	//ID			 	 uint 	`json:"idPersona"`
-	DniPersona           uint   `json:"dniPersona"`
-	CuilPersona          uint   `json:"cuilPersona"`
-	NombresPersona       string `json:"nombresPersona"`
-	ApellidosPersona     string `json:"apellidosPersona"`
-	SexoPersona          string `json:"sexoPersona"`
-	ObservacionesPersona string `json:"observacionesPersona"`
-}*/
-
 type Persona struct {
-	IDPersona uint `form:"idPersona" gorm:"primary_key"`
-	//ID			 	 uint 	`form:"idPersona"`
+	IDPersona            uint   `json:"idPersona" form:"idPersona" gorm:"primary_key"`
+	DniPersona           uint   `json:"dniPersona" form:"dniPersona"`
+	CuilPersona          uint   `json:"cuilPersona" form:"cuilPersona"`
+	NombresPersona       string `json:"nombresPersona" form:"nombresPersona"`
+	ApellidosPersona     string `json:"apellidosPersona" form:"apellidosPersona"`
+	SexoPersona          string `json:"sexoPersona" form:"sexoPersona"`
+	ObservacionesPersona string `json:"observacionesPersona" form:"observacionesPersona"`
+}
+
+/*type Persona struct {
+	IDPersona            uint   `form:"idPersona" gorm:"primary_key"`
 	DniPersona           uint   `form:"dniPersona"`
 	CuilPersona          uint   `form:"cuilPersona"`
-	NombresPersona       string `form:"nombresPersona"`
-	ApellidosPersona     string `form:"apellidosPersona"`
+	NombresPersona       string `form:"nombresPersona" binding:"required"`
+	ApellidosPersona     string `form:"apellidosPersona" binding:"required"`
 	SexoPersona          string `form:"sexoPersona"`
 	ObservacionesPersona string `form:"observacionesPersona"`
+}*/
+
+/*// Binding from JSON
+type LoginJSON struct {
+    User     string `json:"user" binding:"required"`
+    Password string `json:"password" binding:"required"`
 }
+
+// Binding from form values
+type LoginForm struct {
+    User     string `form:"user" binding:"required"`
+    Password string `form:"password" binding:"required"`
+}*/
 
 //Empleado tipo de dato
 type Empleado struct {
@@ -106,17 +115,32 @@ func main() {
 
 	//LoadHTMLFiles loads a slice of HTML files and associates the result with HTML renderer.
 	//Es necesario invocar a los archivo template o html para que se puedan utilizar.
-	router.LoadHTMLFiles("formulario-persona.tmpl")
+	//router.LoadHTMLFiles("formulario-persona.tmpl")
+	//router.LoadHTMLFiles("templates/*") no funca
+
+	// Process the templates at the start so that they don't have to be loaded
+	// from the disk again. This makes serving HTML pages very fast.
+	// ? no tiendo que que es lo que hace, es obvio que carga los archivos, no entiendo bien el porque.
+	router.LoadHTMLGlob("templates/*")
 
 	router.GET("/", Inicio)
 
 	router.GET("/signin", GetUsuario)
-	router.POST("/crear-persona", CrearPersona)
 	router.POST("/crear-usuario-empleado", CrearUsuarioEmpleado)
 
-	router.GET("/formulario-persona", GetFormularioPersona)
-	router.POST("/mostrarDatosPersona", PostMostrarDatosPersona)
+	router.GET("/formulario-persona", FormularioPersona)
+	router.POST("/crear-persona", CrearPersona)
 
+	router.GET("/formulario-empleado", FormularioEmpleado)
+	router.POST("/crear-empleado", CrearPersona)
+
+	router.GET("/formulario-usuario-sistema", FormularioUsuarioSistema)
+	router.POST("/crear-usuario-sistema", CrearUsuarioSistema)
+
+	router.POST("/verificar-datos-formulario-persona", VericarDatosFormularioPersona)
+	//router.POST("/verificar-datos-formulario-persona2", VericarDatosFormularioPersona2)
+	router.POST("/crear-persona", CrearPersona)
+	router.GET("/plantilla", Plantilla)
 	/*
 		sudo lsof -n -i :8080
 		kill -9 <PID>
@@ -157,7 +181,7 @@ func GetUsuario(c *gin.Context) {
 	}
 }
 
-//curl -i -X  POST http://localhost:8887/crear-persona -d '{ "DNIPersona": 12344567, "CuilPersona":20192912, "NombresPersona":"Juan", "ApellidosPersona":"Perez", "SexoPersona":"masculino" }'
+//curl -i -X  POST http://localhost:8080/crear-persona -d '{ "DNIPersona": 12344567, "CuilPersona":20192912, "NombresPersona":"Juan", "ApellidosPersona":"Perez", "SexoPersona":"masculino" }'
 func CrearPersona(c *gin.Context) {
 	var persona Persona
 	c.BindJSON(&persona)
@@ -167,7 +191,7 @@ func CrearPersona(c *gin.Context) {
 }
 
 //ALTER TABLE `usuarios_empleados` AUTO_INCREMENT = 1
-//curl -i -X  POST http://localhost:8887/crear-usuario-empleado -d '{ "IdPersona": 1, "NombreUsuarioEmpleado": "pablo", "ContraseñaUsuarioEmpleado":"lalala" }'
+//curl -i -X  POST http://localhost:8080/crear-usuario-empleado -d '{ "IdPersona": 1, "NombreUsuarioEmpleado": "pablo", "ContraseñaUsuarioEmpleado":"lalala" }'
 func CrearUsuarioEmpleado(c *gin.Context) {
 	var usuario UsuarioEmpleado
 
@@ -205,7 +229,6 @@ func CrearUsuarioEmpleado(c *gin.Context) {
  */
 
 /*
-
 	http://www.forosdelweb.com/f18/aporte-entendiendo-las-cabeceras-post-get-put-delete-920883/
 
 	Relacion CRUD (Crear, recuperar, actualizar y eliminar) con la semántica con "Representational State Transfer" (REST, verbos definidos por la especificación de HTTP: GET, PUT, POST, DELETE, HEAD, etc.)
@@ -252,7 +275,7 @@ func Inicio(c *gin.Context) {
 /*
 	GetPersona: recupera datos desde un formulario.
 */
-func GetFormularioPersona(c *gin.Context) {
+func FormularioPersona(c *gin.Context) {
 	/*dniPersona := c.Param("dni")
 	cuilPersona := c.Param("cuil")
 	nombresPersona := c.Param("nombres")
@@ -296,31 +319,72 @@ func GetFormularioPersona(c *gin.Context) {
 /*
 	PostMostrarDatosPersona: muestra los datos enviados desde un formulario.
 */
-func PostMostrarDatosPersona(c *gin.Context) {
-	//var persona Persona // es equivalente a  persona := new(Persona)
+//curl -i -X  POST http://localhost:8080/mostrarDatosPersona -d '{ "NombresPersona":"Juan"}'
+//curl -v --form nombresPersona=pablo --form apellidosPersona=cristo  POST http://localhost:8080/verificar-datos-formulario-persona
+//curl -v -d "vb_login_username=username&vb_login_password=password&do=login" http://f7.masaladesi.com/login.php
+//curl -v -d "nombresPersona=pablo&apellidosPersona=cristo"  http://localhost:8080/verificar-datos-formulario-persona
+func VericarDatosFormularioPersona(c *gin.Context) {
+	var persona Persona // es equivalente a  persona := new(Persona)
 
-	//c.BindJSON(&persona)
-	//c.Bind(&persona)
-	//c.ShouldBind(&persona)
-
-	//fmt.Println(persona)
-	//fmt.Printf("bla")
+	if c.Bind(&persona) == nil {
+		if persona.NombresPersona == "pablo" && persona.ApellidosPersona == "cristo" {
+			//c.JSON(200, gin.H{"status": "conexion exitosa"})
+		} else {
+			//c.JSON(401, gin.H{"status": "conexion no autorizada"})
+		}
+	}
 
 	//c.JSON(http.StatusOK, persona)
-	//c.JSON(http.StatusOK, gin.H{"nombres": persona.NombresPersona})
 
-	dniPersona := c.PostForm("dni")
-	cuilPersona := c.PostForm("cuil")
-	nombresPersona := c.PostForm("nombres")
+	c.HTML(http.StatusOK, "verificar-formulario-persona.tmpl", gin.H{
+		"dni":           persona.DniPersona,
+		"cuil":          persona.CuilPersona,
+		"nombres":       persona.NombresPersona,
+		"apellidos":     persona.ApellidosPersona,
+		"sexo":          persona.SexoPersona,
+		"observaciones": persona.ObservacionesPersona})
+
+}
+
+/*
+	Para realizar pruebas
+*/
+func VericarDatosFormularioPersonaTests(c *gin.Context) {
+
+	/*var persona Persona
+	c.BindWith(&persona, binding.Form)
+	if persona.NombresPersona == "pablo" && persona.ApellidosPersona == "cristo" {
+		c.JSON(200, gin.H{"status": "you are logged in"})
+	} else {
+		c.JSON(401, gin.H{"status": "unauthorized"})
+	}
+
+	c.JSON(http.StatusOK, persona)
+
+
+	c.JSON(http.StatusOK, c.Request.PostForm) //SI
+	c.JSON(http.StatusOK, c.Request.Form) //SI*/
+
+	/*nombresPersona := c.PostForm("nombres")
 	apellidosPersona := c.PostForm("apellidos")
 	sexoPersona := c.PostForm("sexo")
+	dniPersona := c.PostForm("dni")
+	cuilPersona := c.PostForm("cuil")
 	observacionesPersona := c.PostForm("observaciones")
 
-	c.JSON(http.StatusOK, gin.H{
+	c.HTML(http.StatusOK, "verificar-formulario-persona.tmpl", gin.H{
 		"dni":           dniPersona,
 		"cuil":          cuilPersona,
 		"nombres":       nombresPersona,
 		"apellidos":     apellidosPersona,
 		"sexo":          sexoPersona,
-		"observaciones": observacionesPersona})
+		"observaciones": observacionesPersona})*/
+
+}
+
+/*
+ */
+func Plantilla(c *gin.Context) {
+	c.HTML(http.StatusOK, "test.tmpl", nil)
+
 }
