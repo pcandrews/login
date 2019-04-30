@@ -1,9 +1,12 @@
-curl -i -X  POST http://localhost:8080/crear-persona -d '{ "DNIPersona": 12344567, "CuilPersona":20192912, "NombresPersona":"Juan", "ApellidosPersona":"Perez", "SexoPersona":"masculino" }'
+curl -v -X POST http://localhost:8080/nuevo-empleado-JSON -H 'content-type: application/json' -d '{"dniPersona": 77355, "cuilPersona": 7246, "nombresPersona": "Nana", "apellidosPersona": "Wharhol Nuñes", "sexoPersona": "femenino", "observacionesPersona": "nana es linda", "puestoEmpleado": "7g", "movilEmpleado": "118", "numeroLegajoEmpleado": 338, "celularEmpleado": 551123}'
 
-curl -i -X  POST http://localhost:8080/mostrarDatosPersona -d '{ "NombresPersona":"Juan"}'
+ -X, --request
+ -H, --header
+ -d, --data
 
-curl -v --form nombresPersona=pablo --form apellidosPersona=cristo  POST http://localhost:8080/verificar-datos-formulario-persona
-
-curl -v -d "vb_login_username=username&vb_login_password=password&do=login" http://f7.masaladesi.com/login.php
-
-curl -v -d "nombresPersona=pablo&apellidosPersona=cristo"  http://localhost:8080/verificar-datos-formulario-persona
+ejemplo xml
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+	<user>user</user>
+	<password>123</password>
+</root>)

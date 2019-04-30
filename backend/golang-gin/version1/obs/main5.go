@@ -161,9 +161,8 @@ func main() {
 
 	router.LoadHTMLGlob("pla/*")
 
-	router.GET("/formulario-nuevo-empleado", CrearEmpleadoHTML)
-	router.POST("/nuevo-empleado-JSON", CrearEmpleadoJSON)
-	router.POST("/nuevo-empleado-XML", CrearEmpleadoXML)
+	router.GET("/formulario-empleado", CrearEmpleadoHTML)
+	router.GET("/empleadoJSON", CrearEmpleadoJSON)
 	router.POST("/mostrar-empleado", CrearEmpleado)
 	router.GET("/obterner-empleado/:id", ObtenerEmpleado)
 	router.GET("/obterner-todos-empleados/", ObtenerTodosLosEmpleados)
@@ -189,7 +188,13 @@ func CrearEmpleadoHTML(c *gin.Context) {
 	c.HTML(http.StatusOK, "formulario-empleado.tmpl", nil)
 }
 
+/*
+	Example for binding JSON ({"user": "manu", "password": "123"})
+	curl -v -X POST http://localhost:8080/loginJSON -H 'content-type: application/json' '{ "user": "manu", "password"="123" }'
+*/
 func CrearEmpleadoJSON(c *gin.Context) {
+	//var json Login
+
 	var resultado gin.H
 	var err error
 	var e Empleado
@@ -210,51 +215,15 @@ func CrearEmpleadoJSON(c *gin.Context) {
 		}
 	*/
 
-	e.Crear()
-
 	resultado = gin.H{
 		"resultado": e,
 		"cantidad":  1,
 	}
 
-	//c.JSON(http.StatusOK, gin.H{"status": "you are logged in"})
+	c.JSON(http.StatusOK, gin.H{"status": "you are logged in"})
 
 	//c.JSON(http.StatusOK, "json")
-	c.JSON(http.StatusOK, resultado)
-}
-
-func CrearEmpleadoXML(c *gin.Context) {
-	var resultado gin.H
-	var err error
-	var e Empleado
-
-	if c.ShouldBindXML(&e) != nil {
-		resultado = gin.H{
-			"error": err.Error(),
-		}
-
-		c.JSON(http.StatusBadRequest, resultado)
-		return
-	}
-
-	/*
-		if json.User != "manu" || json.Password != "123" {
-			c.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
-			return
-		}
-	*/
-
-	e.Crear()
-
-	resultado = gin.H{
-		"resultado": e,
-		"cantidad":  1,
-	}
-
-	//c.JSON(http.StatusOK, gin.H{"status": "you are logged in"})
-
-	//c.JSON(http.StatusOK, "json")
-	c.JSON(http.StatusOK, resultado)
+	c.JSON(http.StatusOK, json)
 }
 
 //Post
@@ -263,7 +232,7 @@ func CrearEmpleado(c *gin.Context) {
 	var err error
 	var e Empleado
 
-	if c.ShouldBind(&e) != nil {
+	if c.ShouldBindJSON(&e) != nil {
 		resultado = gin.H{
 			"error": err.Error(),
 		}
@@ -271,7 +240,6 @@ func CrearEmpleado(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, resultado)
 		return
 	}
-
 	e.Crear()
 
 	resultado = gin.H{

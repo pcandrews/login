@@ -26,16 +26,16 @@ var db *gorm.DB
 type Persona struct {
 	//  gorm.Model
 	IDPersona  uint64 `json:"idPersona" xml:"idPersona" form:"idPersona" gorm:"primary_key"`
-	DniPersona uint64 `json:"dniPersona" form:"dniPersona" binding:"required"`
+	DniPersona uint64 `json:"dniPersona" form:"dniPersona"`
 
 	CreadoEn      time.Time `gorm:"-"`
 	ActualizadoEn time.Time `gorm:"-"`
 	EliminadoEn   time.Time `gorm:"-"`
 
-	CuilPersona          uint64 `json:"cuilPersona" form:"cuilPersona" binding:"required"`
-	NombresPersona       string `json:"nombresPersona" form:"nombresPersona" binding:"required"`
-	ApellidosPersona     string `json:"apellidosPersona" form:"apellidosPersona" binding:"required"`
-	SexoPersona          string `json:"sexoPersona" form:"sexoPersona" binding:"required"`
+	CuilPersona          uint64 `json:"cuilPersona" form:"cuilPersona"`
+	NombresPersona       string `json:"nombresPersona" form:"nombresPersona"`
+	ApellidosPersona     string `json:"apellidosPersona" form:"apellidosPersona"`
+	SexoPersona          string `json:"sexoPersona" form:"sexoPersona"`
 	ObservacionesPersona string `json:"observacionesPersona" form:"observacionesPersona"`
 }
 
@@ -49,9 +49,9 @@ type Empleado struct {
 	ActualizadoEn time.Time `gorm:"-"`
 	EliminadoEn   time.Time `gorm:"-"`
 
-	PuestoEmpleado       string `json:"puestoEmpleado" form:"puestoEmpleado" binding:"required"`
+	PuestoEmpleado       string `json:"puestoEmpleado" form:"puestoEmpleado"`
 	MovilEmpleado        string `json:"movilEmpleado" form:"movilEmpleado"`
-	NumeroLegajoEmpleado uint64 `json:"numeroLegajoEmpleado" form:"numeroLegajoEmpleado" binding:"required"`
+	NumeroLegajoEmpleado uint64 `json:"numeroLegajoEmpleado" form:"numeroLegajoEmpleado"`
 	CelularEmpleado      uint64 `json:"celularEmpleado" form:"celularEmpleado"`
 }
 
@@ -161,9 +161,8 @@ func main() {
 
 	router.LoadHTMLGlob("pla/*")
 
-	router.GET("/formulario-nuevo-empleado", CrearEmpleadoHTML)
-	router.POST("/nuevo-empleado-JSON", CrearEmpleadoJSON)
-	router.POST("/nuevo-empleado-XML", CrearEmpleadoXML)
+	router.GET("/formulario-empleado", CrearEmpleadoHTML)
+	router.POST("/empleadoJSON", CrearEmpleadoJSON)
 	router.POST("/mostrar-empleado", CrearEmpleado)
 	router.GET("/obterner-empleado/:id", ObtenerEmpleado)
 	router.GET("/obterner-todos-empleados/", ObtenerTodosLosEmpleados)
@@ -189,7 +188,13 @@ func CrearEmpleadoHTML(c *gin.Context) {
 	c.HTML(http.StatusOK, "formulario-empleado.tmpl", nil)
 }
 
+/*
+	Example for binding JSON ({"user": "manu", "password": "123"})
+	curl -v -X POST http://localhost:8080/CrearEmpleadoJSON -H 'content-type: application/json' '{ "user": "manu", "password"="123" }'
+*/
 func CrearEmpleadoJSON(c *gin.Context) {
+	//var json Login
+
 	var resultado gin.H
 	var err error
 	var e Empleado
@@ -210,42 +215,6 @@ func CrearEmpleadoJSON(c *gin.Context) {
 		}
 	*/
 
-	e.Crear()
-
-	resultado = gin.H{
-		"resultado": e,
-		"cantidad":  1,
-	}
-
-	//c.JSON(http.StatusOK, gin.H{"status": "you are logged in"})
-
-	//c.JSON(http.StatusOK, "json")
-	c.JSON(http.StatusOK, resultado)
-}
-
-func CrearEmpleadoXML(c *gin.Context) {
-	var resultado gin.H
-	var err error
-	var e Empleado
-
-	if c.ShouldBindXML(&e) != nil {
-		resultado = gin.H{
-			"error": err.Error(),
-		}
-
-		c.JSON(http.StatusBadRequest, resultado)
-		return
-	}
-
-	/*
-		if json.User != "manu" || json.Password != "123" {
-			c.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
-			return
-		}
-	*/
-
-	e.Crear()
-
 	resultado = gin.H{
 		"resultado": e,
 		"cantidad":  1,
@@ -263,7 +232,7 @@ func CrearEmpleado(c *gin.Context) {
 	var err error
 	var e Empleado
 
-	if c.ShouldBind(&e) != nil {
+	if c.ShouldBindJSON(&e) != nil {
 		resultado = gin.H{
 			"error": err.Error(),
 		}
@@ -297,7 +266,7 @@ func ObtenerEmpleado(c *gin.Context) {
 	e.IDEmpleado, err = strconv.ParseUint(idParam, 10, 64)
 	if err != nil {
 		resultado = gin.H{
-			"error": err.Error(),
+			"error": err,
 		}
 
 		c.JSON(http.StatusBadRequest, resultado)
@@ -354,7 +323,7 @@ func ActualizarEmpleado(c *gin.Context) {
 	e.IDEmpleado, err = strconv.ParseUint(idParam, 10, 64)
 	if err != nil {
 		resultado = gin.H{
-			"error": err.Error(),
+			"error": err,
 		}
 
 		c.JSON(http.StatusBadRequest, resultado)
@@ -387,7 +356,7 @@ func EliminarEmpleado(c *gin.Context) {
 	e.IDEmpleado, err = strconv.ParseUint(idParam, 10, 64)
 	if err != nil {
 		resultado = gin.H{
-			"error": err.Error(),
+			"error": err,
 		}
 
 		c.JSON(http.StatusBadRequest, resultado)

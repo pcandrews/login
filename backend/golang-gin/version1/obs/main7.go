@@ -161,9 +161,7 @@ func main() {
 
 	router.LoadHTMLGlob("pla/*")
 
-	router.GET("/formulario-nuevo-empleado", CrearEmpleadoHTML)
-	router.POST("/nuevo-empleado-JSON", CrearEmpleadoJSON)
-	router.POST("/nuevo-empleado-XML", CrearEmpleadoXML)
+	router.GET("/formulario-empleado", FormularioCrearEmpleado)
 	router.POST("/mostrar-empleado", CrearEmpleado)
 	router.GET("/obterner-empleado/:id", ObtenerEmpleado)
 	router.GET("/obterner-todos-empleados/", ObtenerTodosLosEmpleados)
@@ -182,79 +180,11 @@ func main() {
 	Get
 	http://localhost:8080/formulario-empleado
 */
-func CrearEmpleadoHTML(c *gin.Context) {
+func FormularioCrearEmpleado(c *gin.Context) {
 	//var resultado gin.H
 	//var err error
 
 	c.HTML(http.StatusOK, "formulario-empleado.tmpl", nil)
-}
-
-func CrearEmpleadoJSON(c *gin.Context) {
-	var resultado gin.H
-	var err error
-	var e Empleado
-
-	if c.ShouldBindJSON(&e) != nil {
-		resultado = gin.H{
-			"error": err.Error(),
-		}
-
-		c.JSON(http.StatusBadRequest, resultado)
-		return
-	}
-
-	/*
-		if json.User != "manu" || json.Password != "123" {
-			c.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
-			return
-		}
-	*/
-
-	e.Crear()
-
-	resultado = gin.H{
-		"resultado": e,
-		"cantidad":  1,
-	}
-
-	//c.JSON(http.StatusOK, gin.H{"status": "you are logged in"})
-
-	//c.JSON(http.StatusOK, "json")
-	c.JSON(http.StatusOK, resultado)
-}
-
-func CrearEmpleadoXML(c *gin.Context) {
-	var resultado gin.H
-	var err error
-	var e Empleado
-
-	if c.ShouldBindXML(&e) != nil {
-		resultado = gin.H{
-			"error": err.Error(),
-		}
-
-		c.JSON(http.StatusBadRequest, resultado)
-		return
-	}
-
-	/*
-		if json.User != "manu" || json.Password != "123" {
-			c.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
-			return
-		}
-	*/
-
-	e.Crear()
-
-	resultado = gin.H{
-		"resultado": e,
-		"cantidad":  1,
-	}
-
-	//c.JSON(http.StatusOK, gin.H{"status": "you are logged in"})
-
-	//c.JSON(http.StatusOK, "json")
-	c.JSON(http.StatusOK, resultado)
 }
 
 //Post
@@ -264,11 +194,7 @@ func CrearEmpleado(c *gin.Context) {
 	var e Empleado
 
 	if c.ShouldBind(&e) != nil {
-		resultado = gin.H{
-			"error": err.Error(),
-		}
-
-		c.JSON(http.StatusBadRequest, resultado)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -296,14 +222,8 @@ func ObtenerEmpleado(c *gin.Context) {
 
 	e.IDEmpleado, err = strconv.ParseUint(idParam, 10, 64)
 	if err != nil {
-		resultado = gin.H{
-			"error": err.Error(),
-		}
-
-		c.JSON(http.StatusBadRequest, resultado)
-		return
+		log.Fatalln(err)
 	}
-
 	e.Leer()
 
 	resultado = gin.H{
@@ -353,12 +273,7 @@ func ActualizarEmpleado(c *gin.Context) {
 
 	e.IDEmpleado, err = strconv.ParseUint(idParam, 10, 64)
 	if err != nil {
-		resultado = gin.H{
-			"error": err.Error(),
-		}
-
-		c.JSON(http.StatusBadRequest, resultado)
-		return
+		log.Fatalln(err)
 	}
 
 	e.Actualizar()
@@ -386,12 +301,7 @@ func EliminarEmpleado(c *gin.Context) {
 
 	e.IDEmpleado, err = strconv.ParseUint(idParam, 10, 64)
 	if err != nil {
-		resultado = gin.H{
-			"error": err.Error(),
-		}
-
-		c.JSON(http.StatusBadRequest, resultado)
-		return
+		log.Fatalln(err)
 	}
 
 	e.Eliminar()

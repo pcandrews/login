@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS pruebas.empleados (
 */
 CREATE TABLE IF NOT EXISTS pruebas.usuarios_empleados (
 	id_usuario_empleado	INT(11) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT UNIQUE,
-    id_persona INT(11) UNSIGNED ZEROFILL NOT NULL UNIQUE,
+    id_empleado INT(11) UNSIGNED ZEROFILL NOT NULL UNIQUE,
 
 	creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
 	actualizado_en DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
@@ -101,7 +101,7 @@ CREATE TABLE IF NOT EXISTS pruebas.usuarios_empleados (
 
 	PRIMARY KEY(id_usuario_empleado),
 
-    FOREIGN KEY (id_persona) REFERENCES pruebas.personas (id_persona) 
+    FOREIGN KEY (id_empleado) REFERENCES pruebas.empleados (id_empleado) 
 		ON DELETE CASCADE 
 		ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 DEFAULT COLLATE=utf8_spanish_ci;
